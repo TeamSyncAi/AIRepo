@@ -11,7 +11,7 @@ NODE_SERVER_URL = 'http://localhost:3000/modules/receive_modules'
 @app.route('/generate_project_modules', methods=['POST'])
 def generate_project_modules():
     data = request.get_json()
-    project_id = data.get('_id', None)  # Extract project ID from request
+    project_id = data.get('_id', None)
 
     if project_id is None:
         return jsonify({"error": "Project ID not found in request data"})
@@ -36,17 +36,22 @@ def generate_project_modules():
             current_module = line.split(":")[1].strip().rstrip('**')
         elif line.startswith("*"):
             task_name = line.split(":")[1].strip().lstrip('**')
-            tasks.append(task_name)
+            tasks.append({"task_name": task_name, "projectID": project_id})
 
     if current_module:
         modules.append({"module_name": current_module, "tasks": tasks})
 
+    print("Generated Modules:", modules)
+
     try:
         response = requests.post(NODE_SERVER_URL, json={"projectID": project_id, "modules": modules})
         response_data = response.json()
+        print("Response from Node Server:", response_data)
         return jsonify({"message": "Modules sent successfully", "response": response_data})
     except Exception as e:
+        print("Error:", str(e))
         return jsonify({"error": f"Failed to send modules: {str(e)}"})
+
 
 
 if __name__ == '__main__':
